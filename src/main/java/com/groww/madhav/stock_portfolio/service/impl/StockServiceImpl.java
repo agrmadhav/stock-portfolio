@@ -28,27 +28,34 @@ public class StockServiceImpl implements StockService {
     @Override
     public void processStockData(MultipartFile file) throws Exception {
         List<Stock> stocks = new ArrayList<>();
-        try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String line;
             boolean isFirstLine = true;
+            // Read each line from the file
             while ((line = bufferedReader.readLine()) != null) {
-                if(isFirstLine){
-                    isFirstLine = false;
+                if (isFirstLine) {
+                    isFirstLine = false;  // Skip the first line (header)
+                    continue;  // Continue to the next line
+                }
+
+                // Process the data
+                if (line != null && !line.trim().isEmpty()) {
+                    String[] data = line.split(",");
+                    if (data.length < 6) {
+                        throw new RuntimeException("Invalid stock data: " + line);
+                    }
+
+                    Stock stock = new Stock();
+                    stock.setStockId(data[0].trim());
+                    stock.setStockName(data[1].trim());
+                    stock.setOpenPrice(Double.parseDouble(data[2].trim()));
+                    stock.setClosePrice(Double.parseDouble(data[3].trim()));
+                    stock.setHighPrice(Double.parseDouble(data[4].trim()));
+                    stock.setLowPrice(Double.parseDouble(data[5].trim()));
+
+                    stocks.add(stock);
                 }
             }
-            String[] data = line.split(",");
-            if(data.length < 6){
-                throw new RuntimeException("Invalid stock data");
-            }
-            Stock stock = new Stock();
-            stock.setStockId(data[0].trim());
-            stock.setStockName(data[1].trim());
-            stock.setOpenPrice((Double.parseDouble(data[2].trim())));
-            stock.setClosePrice((Double.parseDouble(data[3].trim())));
-            stock.setHighPrice((Double.parseDouble(data[4].trim())));
-            stock.setLowPrice((Double.parseDouble(data[5].trim())));
-
-            stocks.add(stock);
         }
         stockRepository.saveAll(stocks);
     }

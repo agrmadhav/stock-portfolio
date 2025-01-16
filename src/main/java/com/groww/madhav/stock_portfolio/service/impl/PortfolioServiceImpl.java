@@ -31,9 +31,17 @@ public class PortfolioServiceImpl implements PortfolioService {
         List<HoldingResponse> holdings = new ArrayList<>();
         double totalCurrentValue = 0.0;
         double totalBuyPrice = 0.0;
+        // Check if holdings are available
+        if (portfolio.getHoldings() == null || portfolio.getHoldings().isEmpty()) {
+            throw new RuntimeException("No holdings found for this userId: " + userId);
+        }
 
         for(Map.Entry<String,Portfolio.Holding>entry : portfolio.getHoldings().entrySet()){
             Portfolio.Holding holding = entry.getValue();
+            // Avoid null or invalid data (e.g., negative price)
+            if (holding == null || holding.getCurrentPrice() == null || holding.getBuyPrice() == null) {
+                throw new RuntimeException("Invalid price data for stock: " + entry.getKey());
+            }
             double gainLoss = holding.getCurrentPrice() - holding.getBuyPrice();
             holdings.add(new HoldingResponse(
                     entry.getKey(),
